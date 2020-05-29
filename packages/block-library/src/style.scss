@@ -235,7 +235,9 @@
 	}
 	/* stylelint-enable function-comma-space-after */
 }
-
+.has-link-color a {
+	color: var(--wp--style--color--link, #00e);
+}
 
 // Font sizes.
 // The reason we add the editor class wrapper here is

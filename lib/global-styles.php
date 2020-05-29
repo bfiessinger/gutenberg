@@ -308,7 +308,7 @@ function gutenberg_experimental_global_styles_get_block_data() {
 
 	$registry = WP_Block_Type_Registry::get_instance();
 	foreach ( $registry->get_all_registered() as $block_name => $block_type ) {
-		if ( ! is_array( $block_type->supports ) ) {
+		if ( empty( $block_type->supports ) || ! is_array( $block_type->supports ) ) {
 			continue;
 		}
 
@@ -375,11 +375,12 @@ function gutenberg_experimental_global_styles_get_block_data() {
  */
 function gutenberg_experimental_global_styles_flatten_styles_tree( $styles ) {
 	$mappings = array(
-		'line-height'      => array( 'typography', 'lineHeight' ),
-		'font-size'        => array( 'typography', 'fontSize' ),
-		'background'       => array( 'color', 'gradient' ),
-		'background-color' => array( 'color', 'background' ),
-		'color'            => array( 'color', 'text' ),
+		'line-height'              => array( 'typography', 'lineHeight' ),
+		'font-size'                => array( 'typography', 'fontSize' ),
+		'background'               => array( 'color', 'gradient' ),
+		'background-color'         => array( 'color', 'background' ),
+		'color'                    => array( 'color', 'text' ),
+		'--wp--style--color--link' => array( 'color', 'link' ),
 	);
 
 	$result = array();
@@ -553,9 +554,6 @@ function gutenberg_experimental_global_styles_get_stylesheet() {
  * and enqueues the resulting stylesheet.
  */
 function gutenberg_experimental_global_styles_enqueue_assets() {
-	if ( ! gutenberg_experimental_global_styles_has_theme_json_support() ) {
-		return;
-	}
 
 	$stylesheet = gutenberg_experimental_global_styles_get_stylesheet();
 
@@ -571,18 +569,17 @@ function gutenberg_experimental_global_styles_enqueue_assets() {
  * @return array New block editor settings
  */
 function gutenberg_experimental_global_styles_settings( $settings ) {
-	if ( ! gutenberg_experimental_global_styles_has_theme_json_support() ) {
-		return $settings;
+
+	if ( gutenberg_experimental_global_styles_has_theme_json_support() ) {
+		$settings['__experimentalGlobalStylesUserEntityId'] = gutenberg_experimental_global_styles_get_user_cpt_id();
+
+		$global_styles = gutenberg_experimental_global_styles_merge_trees(
+			gutenberg_experimental_global_styles_get_core(),
+			gutenberg_experimental_global_styles_get_theme()
+		);
+
+		$settings['__experimentalGlobalStylesBase'] = $global_styles;
 	}
-
-	$settings['__experimentalGlobalStylesUserEntityId'] = gutenberg_experimental_global_styles_get_user_cpt_id();
-
-	$global_styles = gutenberg_experimental_global_styles_merge_trees(
-		gutenberg_experimental_global_styles_get_core(),
-		gutenberg_experimental_global_styles_get_theme()
-	);
-
-	$settings['__experimentalGlobalStylesBase'] = $global_styles;
 
 	// Add the styles for the editor via the settings
 	// so they get processed as if they were added via add_editor_styles:
